@@ -1,54 +1,29 @@
-# api/documents.py
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy.orm import Session
-from typing import List
-from db.session import get_db
-from models.document import Document
-from schemas.document import DocumentCreate, DocumentInDB
-from services.document_processor import DocumentProcessor
-from services.llm_service import LLMService
+from pydantic_settings import BaseSettings
+from typing import Optional
 
-router = APIRouter()
-llm_service = LLMService()
+class Settings(BaseSettings):
+    PROJECT_NAME: str = "RAG SaaS"
+    VERSION: str = "1.0.0"
+    API_V1_STR: str = "/api/v1"
+    
+    POSTGRES_SERVER: str = "localhost"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_DB: str = "ragsaas"
+    SQLALCHEMY_DATABASE_URI: Optional[str] = None
+    
+    JWT_SECRET_KEY: str = "your-secret-key"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    # LLM Configuration
+    LLM_MODEL_PATH: str = "local_model_path"
+    
+    class Config:
+        case_sensitive = True
 
-@router.post("/documents/", response_model=DocumentInDB)
-async def create_document(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
-):
-    # Process document based on file type
-    content = ""
-    if file.content_type == "application/pdf":
-        content = await DocumentProcessor.process_pdf(file.file)
-    elif file.content_type == "text/plain":
-        content = await DocumentProcessor.process_text(file.file)
-    else:
-        raise HTTPException(status_code=400, detail="Unsupported file type")
-    
-    # Generate summary using LLM
-    summary = await llm_service.generate_summary(content)
-    
-    # Create document in database
-    db_document = Document(
-        title=file.filename,
-        content=content,
-        summary=summary,
-        file_path=f"uploads/{file.filename}"
-    )
-    db.add(db_document)
-    db.commit()
-    db.refresh(db_document)
-    return db_document
-
-@router.get("/documents/{document_id}/qa")
-async def answer_question(
-    document_id: int,
-    question: str,
-    db: Session = Depends(get_db)
-):
-    document = db.query(Document).filter(Document.id == document_id).first()
-    if not document:
-        raise HTTPException(status_code=404, detail="Document not found")
-    
-    answer = await llm_service.answer_question(document.content, question)
-    return {"answer": answer}
+settings = Settings()
+settings.SQLALCHEMY_DATABASE_URI = (
+    f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
+    f"@{settings.POSTGRES_SERVER}/{settings.POSTGRES_DB}"
+)
