@@ -1,8 +1,7 @@
 # main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api import documents, users
-from api import auth
+from api import api_router  # Importa el router principal
 from core.config import settings
 
 app = FastAPI(
@@ -19,3 +18,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Incluye el router principal
+app.include_router(api_router, prefix=settings.API_V1_STR)
