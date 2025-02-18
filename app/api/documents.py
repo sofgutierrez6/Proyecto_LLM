@@ -7,6 +7,7 @@ from app.models.document import Document
 from app.schemas.document import Document as DocumentSchema, DocumentCreate
 from app.services.document_processor import DocumentProcessor
 from app.services.llm_service import LLMService
+from app.api.auth import get_current_user_id
 
 router = APIRouter()
 
