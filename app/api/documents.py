@@ -25,3 +25,37 @@ async def upload_document(
         owner_id=current_user_id
     )
     
+    # Generate summary using LLM
+    summary = await LLMService.generate_summary(content)
+    document.summary = summary
+    
+    db.add(document)
+    db.commit()
+    db.refresh(document)
+    return document
+
+@router.get("/documents", response_model=List[DocumentSchema])
+async def get_documents(
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
+    documents = db.query(Document).filter(Document.owner_id == current_user_id).all()
+    return documents
+
+@router.post("/ask/{document_id}")
+async def ask_question(
+    document_id: int,
+    question: str,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
+    document = db.query(Document).filter(
+        Document.id == document_id,
+        Document.owner_id == current_user_id
+    ).first()
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    answer = await LLMService.answer_question(document.content, question)
+    return {"answer": answer}
