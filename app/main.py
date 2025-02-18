@@ -1,8 +1,13 @@
-# main.py
+# app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api import api_router  # Importa el router principal
-from core.config import settings
+from app.core.config import settings
+from app.api import auth, documents
+from app.db.base import Base
+from app.db.session import engine
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -10,14 +15,20 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Set up CORS
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # In production, replace with specific origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Incluye el router principal
-app.include_router(api_router, prefix=settings.API_V1_STR)
+# Include routers
+app.include_router(auth.router, prefix=settings.API_V1_STR + "/auth", tags=["auth"])
+app.include_router(documents.router, prefix=settings.API_V1_STR + "/documents", tags=["documents"])
+app.include_router(users.router, prefix=settings.API_V1_STR + "/users", tags=["users"])
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

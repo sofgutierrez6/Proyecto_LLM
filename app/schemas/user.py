@@ -1,18 +1,16 @@
-# schemas/user.py
+# app/schemas/user.py
 from pydantic import BaseModel, EmailStr
-from typing import Optional
-from datetime import datetime
+from typing import Optional, List
 
 class UserBase(BaseModel):
     email: EmailStr
-    full_name: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
 
-class UserInDB(UserBase):
+class User(UserBase):
     id: int
-    created_at: datetime
-    
+    is_active: bool
+
     class Config:
         from_attributes = True

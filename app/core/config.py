@@ -1,3 +1,4 @@
+# app/core/config.py
 from pydantic_settings import BaseSettings
 from typing import Optional
 
@@ -13,11 +14,14 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
     
     JWT_SECRET_KEY: str = "your-secret-key"
-    JWT_ALGORITHM: str = "HS256"
+    ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
-    # LLM Configuration
-    LLM_MODEL_PATH: str = "local_model_path"
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    
+    OLLAMA_API_URL: str = "http://localhost:11434"
+    MODEL_NAME: str = "llama2"
     
     class Config:
         case_sensitive = True
