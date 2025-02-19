@@ -1,2 +1,2 @@
-# Proyecto_LLM_Fierritos
-Proyecto de cloud con el que nos estresaremos 13 semanas
+# Proyecto_LLM
+Proyecto de cloud
